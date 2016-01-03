@@ -93,6 +93,7 @@ Finally, there are many Lens libraries out there such as [Monocle][github-monocl
 For example, with Monocle, just declare the dependency in build sbt, then import classes for use:
 
 {% highlight scala %}
+import monocle.Lens
 val addressNoLens = Lens[Address, String]
     (_.no)(newNo => a => a.copy(no = newNo))
 val companyAddrLens = Lens[Company, Address]
