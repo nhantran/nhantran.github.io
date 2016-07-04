@@ -5,9 +5,89 @@
     <description>This blog is all about my learning and working on IT technologies, mainly in software development area. Typesafe technology stack (Scala, Akka, Play..) and Cassandra are among the most favourite things I am pursuing to build reactive systems.</description>
     <link>http://nhantran.com/</link>
     <atom:link href="http://nhantran.com/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sun, 03 Jan 2016 13:45:42 +0000</pubDate>
-    <lastBuildDate>Sun, 03 Jan 2016 13:45:42 +0000</lastBuildDate>
-    <generator>Jekyll v3.0.1</generator>
+    <pubDate>Mon, 04 Jul 2016 18:25:06 +0000</pubDate>
+    <lastBuildDate>Mon, 04 Jul 2016 18:25:06 +0000</lastBuildDate>
+    <generator>Jekyll v3.1.6</generator>
+    
+      <item>
+        <title>Make a https request using Akka Http!</title>
+        <description>&lt;p&gt;Using Akka Http to send a GET request to any website seems to be simple with following steps:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Add akka-http dependencies to build.sbt&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;libraryDependencies&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;++=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Seq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;com.typesafe.akka&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%%&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;akka-http-core&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;2.4.7&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;com.typesafe.akka&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%%&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;akka-http-experimental&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;2.4.7&quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;And add the following code to send a simple GET request:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;implicit&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;system&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ActorSystem&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;blogs&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;implicit&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;materializer&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;ActorMaterializer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;http://www.nytimes.com/&quot;&lt;/span&gt;
+&lt;span class=&quot;nc&quot;&gt;Http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;singleRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;HttpRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;uri&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Uri&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;))).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;response&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;//Do anything with response here
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Next, you may want to request a https site, such as &lt;strong&gt;https://www.youtube.com&lt;/strong&gt;. But the code above should hang.. 
+The reason was the root CA of this site has not been imported into trust store. Let’s resolve it by following steps:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Get root CA via command line:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;keytool -printcert -sslserver www.youtube.com -rfc&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;The ‘keytool’ command requires Java installed in your system&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Copy the last certificate including ‘—–BEGIN CERTIFICATE—–’ and ‘—–END CERTIFICATE—–’ and pass over application.conf&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;s&quot;&gt;akka {&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;ssl-config {&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;trustManager = {&lt;/span&gt;
+      &lt;span class=&quot;s&quot;&gt;stores = [&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;{ type = &quot;PEM&quot;, data = &quot;&quot;&quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;-----BEGIN CERTIFICATE-----&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;MIIDfTCCAuagAwIBAgIDErvmMA0GCSqGSIb3DQEBBQUAME4xCzAJBgNVBAYTAlVTMRAwDgYDVQQK&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;EwdFcXVpZmF4MS0wKwYDVQQLEyRFcXVpZmF4IFNlY3VyZSBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkw&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;HhcNMDIwNTIxMDQwMDAwWhcNMTgwODIxMDQwMDAwWjBCMQswCQYDVQQGEwJVUzEWMBQGA1UEChMN&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;R2VvVHJ1c3QgSW5jLjEbMBkGA1UEAxMSR2VvVHJ1c3QgR2xvYmFsIENBMIIBIjANBgkqhkiG9w0B&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;AQEFAAOCAQ8AMIIBCgKCAQEA2swYYzD99BcjGlZ+W988bDjkcbd4kdS8odhM+KhDtgPpTSEHCIja&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;WC9mOSm9BXiLnTjoBbdqfnGk5sRgprDvgOSJKA+eJdbtg/OtppHHmMlCGDUUna2YRpIuT8rxh0PB&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;FpVXLVDviS2Aelet8u5fa9IAjbkU+BQVNdnARqN7csiRv8lVK83Qlz6cJmTM386DGXHKTubU1Xup&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;Gc1V3sjs0l44U+VcT4wt/lAjNvxm5suOpDkZALeVAjmRCw7+OC7RHQWa9k0+bw8HHa8sHo9gOeL6&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;NlMTOdReJivbPagUvTLrGAMoUgRx5aszPeE4uwc2hGKceeoWMPRfwCvocWvk+QIDAQABo4HwMIHt&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;MB8GA1UdIwQYMBaAFEjmaPkr0rKV10fYIyAQTzOYkJ/UMB0GA1UdDgQWBBTAephojYn7qwVkDBF9&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;qn1luMrMTjAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBBjA6BgNVHR8EMzAxMC+gLaAr&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;hilodHRwOi8vY3JsLmdlb3RydXN0LmNvbS9jcmxzL3NlY3VyZWNhLmNybDBOBgNVHSAERzBFMEMG&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;BFUdIAAwOzA5BggrBgEFBQcCARYtaHR0cHM6Ly93d3cuZ2VvdHJ1c3QuY29tL3Jlc291cmNlcy9y&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;ZXBvc2l0b3J5MA0GCSqGSIb3DQEBBQUAA4GBAHbhEm5OSxYShjAGsoEIz/AIx8dxfmbuwu3UOx//&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;8PDITtZDOLC5MH0Y0FWDomrLNhGc6Ehmo21/uBPUR/6LWlxz/K7ZGzIZOKuXNBSqltLroxwUCEm2&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;u+WR74M26x1Wb8ravHNjkOR/ez4iyz0H7V84dJzjA1BOoa+Y7mHyhD8S&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;-----END CERTIFICATE-----&lt;/span&gt;        
+        &lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot; }&lt;/span&gt;
+      &lt;span class=&quot;s&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;And you should see the request work again.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 04 Jul 2016 00:00:00 +0000</pubDate>
+        <link>http://nhantran.com/akka-http-send-https-request</link>
+        <guid isPermaLink="true">http://nhantran.com/akka-http-send-https-request</guid>
+        
+        
+        <category>Scala</category>
+        
+      </item>
     
       <item>
         <title>Using LENS in Scala</title>
